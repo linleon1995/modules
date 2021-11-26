@@ -2,8 +2,11 @@ import os
 import torch
 import numpy as np
 from tensorboardX import SummaryWriter
-from utils import train_utils
-# TODO: Try to Minimum libraries dependency
+import sys
+sys.path.append("..")
+# TODO: improve metrics
+from modules.utils import train_utils
+from modules.utils import metrics
 
 
 class Trainer(object):
@@ -17,7 +20,6 @@ class Trainer(object):
                  valid_dataloader,
                  logger,
                  device,
-                 checkpoint_path,
                  USE_TENSORBOARD=True,
                  USE_CUDA=True,
                  ):
@@ -31,12 +33,13 @@ class Trainer(object):
         self.iterations = 0
         self.device = device
         self.USE_TENSORBOARD = USE_TENSORBOARD
-        self.checkpoint_path = checkpoint_path
+        self.checkpoint_path = self.config.checkpoint_path
         if self.USE_TENSORBOARD:
             self.train_writer = SummaryWriter(log_dir=os.path.join(self.checkpoint_path, 'train'))
             self.test_writer = SummaryWriter(log_dir=os.path.join(self.checkpoint_path, 'valid'))
         if USE_CUDA:
             self.model.cuda()
+        self.max_acc = 0
 
     def fit(self):
         for self.epoch in range(1, self.config.train.epoch + 1):
@@ -63,17 +66,17 @@ class Trainer(object):
             input_var = train_utils.minmax_norm(input_var)
             input_var = input_var.to(self.device)
             target_var = target_var.to(self.device)
-            def closure():
-                batch_output = self.model(input_var)
-                if isinstance(self.criterion, torch.nn.CrossEntropyLoss):
-                    loss = self.criterion(batch_output, torch.argmax(target_var.long(), axis=1))
-                else:
-                    loss = self.criterion(batch_output, target_var)
-                # loss = self.criterion(batch_output, target_var)
-                loss.backward()
-                return loss
+            # def closure():
+            batch_output = self.model(input_var)
+            if isinstance(self.criterion, torch.nn.CrossEntropyLoss):
+                loss = self.criterion(batch_output, torch.argmax(target_var.long(), axis=1))
+            else:
+                loss = self.criterion(batch_output, target_var)
+            # loss = self.criterion(batch_output, target_var)
+            loss.backward()
+                # return loss
             self.optimizer.zero_grad()
-            self.optimizer.step(closure)
+            self.optimizer.step()
         
             loss = loss.item()
             total_train_loss += loss
@@ -89,7 +92,7 @@ class Trainer(object):
 
     def validate(self):
         self.model.eval()
-        eval_tool = metrics.SegmentationMetrics(self.config.model.out_channels, ['accuracy'])
+        self.eval_tool = metrics.SegmentationMetrics(self.config.model.out_channels, ['accuracy'])
         test_n_iter, total_test_loss = 0, 0
         for _, data in enumerate(self.valid_dataloader):
             test_n_iter += 1
@@ -111,7 +114,7 @@ class Trainer(object):
             labels = torch.argmax(labels, dim=1)
             labels = labels.cpu().detach().numpy()
             prediction = prediction.cpu().detach().numpy()
-            evals = eval_tool(labels, prediction)
+            evals = self.eval_tool(labels, prediction)
 
     def load_model_from_checkpoint():
         pass
@@ -123,7 +126,7 @@ class Trainer(object):
             "epoch": self.epoch
             }
         avg_test_acc = metrics.accuracy(
-                np.sum(eval_tool.total_tp), np.sum(eval_tool.total_fp), np.sum(eval_tool.total_fn), np.sum(eval_tool.total_tn)).item()
+                np.sum(self.eval_tool.total_tp), np.sum(self.eval_tool.total_fp), np.sum(self.eval_tool.total_fn), np.sum(self.eval_tool.total_tn)).item()
 
         if avg_test_acc > self.max_acc:
             self.max_acc = avg_test_acc
@@ -139,4 +142,4 @@ class Trainer(object):
 
 
 if __name__ == '__main__':
-    trainer = Trainer(model)
+    pass
