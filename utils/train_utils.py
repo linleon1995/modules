@@ -114,7 +114,7 @@ def create_lr_scheduler(lr_config, optimizer):
     return clazz(**lr_config)
 
 
-def get_loss(name):
+def create_criterion(name):
     if name == 'CrossEntropy':
         loss_func = nn.CrossEntropyLoss()
     elif name == 'BCE':
@@ -122,3 +122,13 @@ def get_loss(name):
     else:
         raise ValueError('Unknown Loss name.')
     return loss_func
+
+
+def create_activation(name):
+    if name == 'sigmoid':
+        activation = torch.sigmoid()
+    elif name == 'softmax':
+        activation = torch.nn.functional.softmax()
+    else:
+        raise ValueError('Unknown Loss name.')
+    return activation
