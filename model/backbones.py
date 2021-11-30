@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import models
 import timm
-from models import utils
+from . import utils
 get_activation = utils.get_activation
 
 

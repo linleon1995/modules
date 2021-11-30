@@ -1,7 +1,7 @@
 import argparse
 import torch
 import yaml
-from utils import train_utils
+from . import train_utils
 
 logger = train_utils.get_logger('ConfigLoader')
 

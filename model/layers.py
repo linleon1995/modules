@@ -3,7 +3,7 @@ from functools import partial
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from models import utils
+from . import utils
 get_activation = utils.get_activation
 
 # TODO: Complete resnetblock

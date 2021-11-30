@@ -35,7 +35,7 @@ class Trainer(object):
         self.device = device
         self.activation_func = activation_func
         self.USE_TENSORBOARD = USE_TENSORBOARD
-        self.checkpoint_path = self.config.checkpoint_path
+        self.checkpoint_path = self.config.CHECKPOINT_PATH
         if self.USE_TENSORBOARD:
             self.train_writer = SummaryWriter(log_dir=os.path.join(self.checkpoint_path, 'train'))
             self.valid_writer = SummaryWriter(log_dir=os.path.join(self.checkpoint_path, 'valid'))
@@ -44,7 +44,7 @@ class Trainer(object):
         self.max_acc = 0
 
     def fit(self):
-        for self.epoch in range(1, self.config.train.epoch + 1):
+        for self.epoch in range(1, self.config.TRAIN.EPOCH + 1):
             self.train()
             with torch.no_grad():
                 self.validate()
@@ -57,7 +57,7 @@ class Trainer(object):
     def train(self):
         self.model.train()
         print(60*"=")
-        self.logger.info(f'Epoch {self.epoch}/{self.config.train.epoch}')
+        self.logger.info(f'Epoch {self.epoch}/{self.config.TRAIN.EPOCH}')
         train_samples = len(self.train_dataloader.dataset)
         for i, data in enumerate(self.train_dataloader, self.iterations + 1):
             total_train_loss = 0.0
@@ -85,7 +85,7 @@ class Trainer(object):
             if self.USE_TENSORBOARD:
                 self.train_writer.add_scalar('Loss/step', loss, i)
 
-            display_step = train_utils.calculate_display_step(num_sample=train_samples, batch_size=self.config.dataset.batch_size)
+            display_step = train_utils.calculate_display_step(num_sample=train_samples, batch_size=self.config.DATA.BATCH_SIZE)
             if i%display_step == 0:
                 self.logger.info('Step {}  Step loss {}'.format(i, loss))
         self.iterations = i
@@ -94,7 +94,7 @@ class Trainer(object):
 
     def validate(self):
         self.model.eval()
-        self.eval_tool = metrics.SegmentationMetrics(self.config.model.out_channels, ['accuracy'])
+        self.eval_tool = metrics.SegmentationMetrics(self.config.MODEL.NUM_CLASSES, ['accuracy'])
         test_n_iter, total_test_loss = 0, 0
         valid_samples = len(self.valid_dataloader.dataset)
         for _, data in enumerate(self.valid_dataloader):
@@ -143,7 +143,7 @@ class Trainer(object):
             checkpoint_name = 'ckpt_best.pth'
             torch.save(checkpoint, os.path.join(self.checkpoint_path, checkpoint_name))
 
-        if self.epoch%self.config.train.checkpoint_saving_steps == 0:
+        if self.epoch%self.config.TRAIN.CHECKPOINT_SAVING_STEPS == 0:
             self.logger.info(f"Saving model with testing accuracy {self.avg_test_acc:.3f} in epoch {self.epoch} ")
             checkpoint_name = 'ckpt_best_{:04d}.pth'.format(self.epoch)
             torch.save(checkpoint, os.path.join(self.checkpoint_path, checkpoint_name))

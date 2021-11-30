@@ -1,15 +1,9 @@
 import logging
 import torch.nn as nn
-from .. import model
-layers = model.layers
-# backbones = model.backbones
-# utils = model.utils
-# from model import layers
-# from model import backbones
-# from model import utils
-# import layers
-# import backbones
-# import utils
+import sys
+from modules.model import backbones
+from modules.model import layers
+from modules.model import utils
 creat_torchvision_backbone = backbones.creat_torchvision_backbone
 creat_timm_backbone = backbones.creat_timm_backbone
 MultiLayerPerceptron = layers.MultiLayerPerceptron
