@@ -51,8 +51,10 @@ class PytorchResnetBuilder(nn.Module):
             # model_list[0] = torch.nn.Conv1d(
             #     self.in_channels, conv1_out_c, conv1_ks, conv1_stride, conv1_padding, bias=False)
             # model = nn.Sequential(*model_list)
-            model.conv1 = torch.nn.Conv1d(
+            model_list = model_list[1:]
+            new_conv1 = torch.nn.Conv2d(
                 self.in_channels, conv1_out_c, conv1_ks, conv1_stride, conv1_padding, bias=False)
+            model = torch.nn.Sequential(new_conv1, *model_list)
         return model
 
     def forward(self, x):

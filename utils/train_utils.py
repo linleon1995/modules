@@ -112,6 +112,22 @@ def create_optimizer(config, model):
     return optimizer
 
 
+def create_optimizer_temp(optimizer_config, model):
+    # TODO: add SGD
+    learning_rate = optimizer_config['learning_rate']
+    weight_decay = optimizer_config.get('weight_decay', 0)
+    momentum = optimizer_config.get('momentum', 0)
+    betas = tuple(optimizer_config.get('betas', (0.9, 0.999)))
+    optimizer_name = optimizer_config['optimizer']
+    if optimizer_name == 'Adam':
+        optimizer = optim.Adam(model.parameters(), lr=learning_rate, betas=betas, weight_decay=weight_decay)
+    elif optimizer_name == 'SGD':
+        optimizer = optim.SGD(model.parameters(), lr=learning_rate, betas=betas, momentum=momentum, weight_decay=weight_decay)
+    else:
+        raise ValueError('Unknown optimizer name.')
+    return optimizer
+
+
 def create_lr_scheduler(lr_config, optimizer):
     if lr_config is None:
         return None

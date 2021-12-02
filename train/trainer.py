@@ -64,7 +64,8 @@ class Trainer(object):
             # batch_input, batch_target = data
             # input_var = batch_input
             # target_var = batch_target
-            input_var, target_var = data['input'], data['gt']
+            # input_var, target_var = data['input'], data['gt']
+            input_var, target_var = data
             input_var = train_utils.minmax_norm(input_var)
             input_var, target_var = input_var.to(self.device), target_var.to(self.device)
 
@@ -99,7 +100,8 @@ class Trainer(object):
         valid_samples = len(self.valid_dataloader.dataset)
         for _, data in enumerate(self.valid_dataloader):
             test_n_iter += 1
-            inputs, labels = data['input'], data['gt']
+            # inputs, labels = data['input'], data['gt']
+            inputs, labels = data
             inputs = train_utils.minmax_norm(inputs)
             inputs, labels = inputs.to(self.device), labels.to(self.device)
             outputs = self.model(inputs)
