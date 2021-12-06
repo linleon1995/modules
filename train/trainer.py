@@ -71,6 +71,18 @@ class Trainer(object):
 
             # def closure():
             batch_output = self.model(input_var)
+            
+            import matplotlib.pyplot as plt
+            # batch_output = self.activation_func(batch_output)
+            if i%20 == 0:
+                fig, ax = plt.subplots(1, 3)
+                ax[0].imshow(input_var.cpu().detach().numpy()[0,0], 'gray')
+                ax[0].imshow(target_var.cpu().detach().numpy()[0,0], cmap='jet', alpha=0.2)
+                ax[1].imshow(batch_output.cpu().detach().numpy()[0,0], 'gray')
+                ax[2].imshow(target_var.cpu().detach().numpy()[0,0], 'gray')
+                # plt.show()
+                fig.savefig(f'{i:03d}.png')
+
             # if isinstance(self.criterion, torch.nn.CrossEntropyLoss):
             #     loss = self.criterion(batch_output, torch.argmax(target_var.long(), axis=1))
             # else:
@@ -87,6 +99,8 @@ class Trainer(object):
                 self.train_writer.add_scalar('Loss/step', loss, i)
 
             display_step = train_utils.calculate_display_step(num_sample=train_samples, batch_size=self.config.DATA.BATCH_SIZE)
+            # TODO: display_step = 10
+            display_step = 10
             if i%display_step == 0:
                 self.logger.info('Step {}  Step loss {}'.format(i, loss))
         self.iterations = i
@@ -118,7 +132,10 @@ class Trainer(object):
             # TODO: torch.nn.functional.sigmoid(outputs)
             # prob = torch.nn.functional.softmax(outputs, dim=1)
             # prob = torch.sigmoid(outputs)
-            prob = self.activation_func(outputs)
+            if self.activation_func:
+                prob = self.activation_func(outputs)
+            else:
+                prob = outputs
             prediction = torch.argmax(prob, dim=1)
             labels = torch.argmax(labels, dim=1)
             labels = labels.cpu().detach().numpy()

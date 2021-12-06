@@ -45,25 +45,25 @@ class UNet_2d_backbone(nn.Module):
                                 num_groups=num_groups,
                                 padding=conv_padding)
         # self.classifier = Conv_Bn_Activation(in_channels=f_maps[0], out_channels=self.out_channels, activation=None)
-        self.classifier = SingleConv(f_maps[0]//2, out_channels, conv_type='2d', kernel_size=1, order='bc')
+        self.classifier = SingleConv(f_maps[0]//2, out_channels, conv_type='2d', kernel_size=1, order='bc', padding='same')
 
     def forward(self, x):
         # encoder part
-        encoders_features = []
+        encoder_features = []
         for encoder in self.encoders:
             x = encoder(x)
             # reverse the encoder outputs to be aligned with the decoder
-            encoders_features.insert(0, x)
+            encoder_features.insert(0, x)
 
         # remove the last encoder's output from the list
         # !!remember: it's the 1st in the list
-        encoders_features = encoders_features[1:]
+        encoder_features = encoder_features[1:]
 
         # decoder part
-        for decoder, encoder_features in zip(self.decoders, encoders_features):
+        for decoder, encoder_feature in zip(self.decoders, encoder_features):
             # pass the output from the corresponding encoder and the output
             # of the previous decoder
-            x = decoder(encoder_features, x)
+            x = decoder(encoder_feature, x)
 
         # # apply final_activation (i.e. Sigmoid or Softmax) only during prediction. During training the network outputs
         # # logits and it's up to the user to normalize it before visualising with tensorboard or computing validation metric

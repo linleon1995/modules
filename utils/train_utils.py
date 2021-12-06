@@ -8,6 +8,7 @@ import torch
 import torch.nn as nn  
 import torch.optim as optim
 
+from modules.utils import loss
 
 class DictAsMember(dict):
     def __getattr__(self, name):
@@ -144,6 +145,8 @@ def create_criterion(name):
         loss_func = nn.CrossEntropyLoss()
     elif name == 'BCE':
         loss_func = nn.BCEWithLogitsLoss()
+    elif name == 'DiceLoss':
+        loss_func = loss.DiceLoss()
     else:
         raise ValueError('Unknown Loss name.')
     return loss_func
