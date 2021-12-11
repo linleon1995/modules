@@ -4,28 +4,20 @@ import torch
 from sklearn.metrics import confusion_matrix
 
 
-# TODO: check correctness and multi-class solution
-# def dsc(prediction, label):
-#     tp = ((prediction.data == 1) & (label.data == 1)).sum()
-#     fn = ((prediction.data == 0) & (label.data == 1)).sum()
-#     fp = ((prediction.data == 1) & (label.data == 0)).sum()
-#     denominator = 2*tp + fp +fn
-#     if denominator == 0:
-#         return 1
-#     else:
-#         return 2*tp / denominator
-
 def check_zero_division(func):
     def warp():
         
         func()
     return warp
     
+
 def sensitivity(prediction, label):
     pass
 
+
 def specificity(prediction, label):
     pass
+
 
 # TODO: w/ label and w/o label
 # TODO: multi-classes example
@@ -201,20 +193,4 @@ class BaseEvaluator():
     def check_shape(self):
         pass
 
-
-
-    # def get_metrics(self):
-    #     def metrics(label, pred):
-    #         for m in self.metrics:
-    #             if m in ['precsion', 'recall', 'f1', 'accuracy']:
-    #                 cm = get_confusion_matrix(label, pred)
-    #             elif m in ['mean_DSC', 'mean_IoU']
-    #     return metrics
-
-
-# suedo code
-# loader = Dataloader()
-# net = ModelBuilder()
-# base_evaluator = BaseEvaluator(loader, net, metrics=['precision', 'recall'])
-# evaluation = base_evaluator.get_evaluation()
 
