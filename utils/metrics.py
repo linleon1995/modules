@@ -77,7 +77,6 @@ def specificity(tn, fp):
 
 
 # TODO: property for all avaiable metrics
-# TODO: input output type --> numpy or tensor
 # TODO: should implement in @staticmethod
 class SegmentationMetrics():
     def __init__(self, num_class, metrics=None):
