@@ -6,6 +6,20 @@ import numpy as np
 import logging
 from pydub import AudioSegment
 import pandas as pd
+import SimpleITK as sitk
+
+
+
+def load_itk(filename):
+    '''
+    This funciton reads a '.mhd' file using SimpleITK and return the image array, origin and spacing of the image.
+    '''
+    # Reads the image using SimpleITK
+    itkimage = sitk.ReadImage(filename)
+    ct_scan = sitk.GetArrayFromImage(itkimage)
+    origin = np.array(list(reversed(itkimage.GetOrigin())))
+    spacing = np.array(list(reversed(itkimage.GetSpacing())))
+    return ct_scan, origin, spacing
 
 
 def get_dir_list(data_path, full_path=True):

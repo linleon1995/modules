@@ -113,6 +113,8 @@ def mean_dsc(cm):
     cm_diag = np.diagonal(cm).astype(float)
     denominator = sum_over_row + sum_over_col
 
+    denominator = denominator[1:]
+    cm_diag = cm_diag[1:]
     # The mean is only computed over classes that appear in the
     # label or prediction tensor. If the denominator is 0, we need to
     # ignore the class.
@@ -137,7 +139,7 @@ def mean_dsc(cm):
         np.sum(dscs) / num_valid_entries,
         0)
     # print('mean Dice Score Simililarity: {:.4f}'.format(float(m_dsc)))
-    return m_dsc
+    return m_dsc, dscs
 
 
 def mean_iou(cm):
@@ -147,6 +149,8 @@ def mean_iou(cm):
     cm_diag = np.diagonal(cm).astype(float)
     denominator = sum_over_row + sum_over_col - cm_diag
 
+    denominator = denominator[1:]
+    cm_diag = cm_diag[1:]
     # The mean is only computed over classes that appear in the
     # label or prediction tensor. If the denominator is 0, we need to
     # ignore the class.
@@ -171,7 +175,7 @@ def mean_iou(cm):
         np.sum(ious) / num_valid_entries,
         0)
     # print('mean Intersection over Union: {:.4f}'.format(float(m_iou)))
-    return m_iou
+    return m_iou, ious
 
 
 def accuracy(cm):
