@@ -5,7 +5,7 @@ from . import train_utils
 
 logger = train_utils.get_logger('ConfigLoader')
 
-
+# TODO: should call add_device
 def get_device(config):
     # Get a device to train on
     device_str = config.get('device', None)
@@ -35,8 +35,6 @@ def load_config(config_reference=None):
     elif isinstance(config_reference, dict):
         config = config_reference
 
-    config = get_device(config)
-    config = train_utils.DictAsMember(config)
     return config
 
 

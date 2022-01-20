@@ -10,6 +10,7 @@ import torch.optim as optim
 
 from modules.utils import loss
 
+
 class DictAsMember(dict):
     def __getattr__(self, name):
         value = self[name]

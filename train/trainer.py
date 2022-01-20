@@ -2,7 +2,6 @@ import os
 import torch
 import numpy as np
 from tensorboardX import SummaryWriter
-from engine import train_one_epoch, evaluate
 import sys
 sys.path.append("..")
 # TODO: improve metrics
@@ -55,18 +54,7 @@ class Trainer(object):
             self.train_writer.close()
             self.valid_writer.close()
             
-    
-
-
     def train(self):
-        for epoch in range(self.epoch):
-            # train for one epoch, printing every 10 iterations
-            train_one_epoch(self.model, self.optimizer, self.train_dataloader, self.device, self.epoch, print_freq=10)
-            # update the learning rate
-            # lr_scheduler.step()
-            # evaluate on the test dataset
-            evaluate(self.model, self.valid_dataloader, device=self.device)
-        
         self.model.train()
         print(60*"=")
         self.logger.info(f'Epoch {self.epoch}/{self.config.TRAIN.EPOCH}')
@@ -76,24 +64,31 @@ class Trainer(object):
             # batch_input, batch_target = data
             # input_var = batch_input
             # target_var = batch_target
-            # input_var, target_var = data['input'], data['gt']
-            input_var, target_var = data
-            input_var = train_utils.minmax_norm(input_var)
+            input_var, target_var = data['input'], data['target']
+            # input_var, target_var = data
+            # input_var = train_utils.minmax_norm(input_var)
             input_var, target_var = input_var.to(self.device), target_var.to(self.device)
 
             # def closure():
             batch_output = self.model(input_var)
             
             import matplotlib.pyplot as plt
-            # batch_output = self.activation_func(batch_output)
-            if i%20 == 0:
-                fig, ax = plt.subplots(1, 3)
-                ax[0].imshow(input_var.cpu().detach().numpy()[0,0], 'gray')
-                ax[0].imshow(target_var.cpu().detach().numpy()[0,0], cmap='jet', alpha=0.2)
-                ax[1].imshow(batch_output.cpu().detach().numpy()[0,0], 'gray')
-                ax[2].imshow(target_var.cpu().detach().numpy()[0,0], 'gray')
-                # plt.show()
-                fig.savefig(f'{i:03d}.png')
+            for n in range(8):
+                for i in range(0, 64, 10):
+                    plt.imshow(input_var[n,0,i].cpu().detach().numpy(), 'gray')
+                    plt.title(f'{n}-{i}-{target_var[n,0].item()}-{batch_output[n,0].item()}')
+                    plt.show()
+            
+            # import matplotlib.pyplot as plt
+            # # batch_output = self.activation_func(batch_output)
+            # if i%20 == 0:
+            #     fig, ax = plt.subplots(1, 3)
+            #     ax[0].imshow(input_var.cpu().detach().numpy()[0,0], 'gray')
+            #     ax[0].imshow(target_var.cpu().detach().numpy()[0,0], cmap='jet', alpha=0.2)
+            #     ax[1].imshow(batch_output.cpu().detach().numpy()[0,0], 'gray')
+            #     ax[2].imshow(target_var.cpu().detach().numpy()[0,0], 'gray')
+            #     # plt.show()
+            #     fig.savefig(f'{i:03d}.png')
 
             # if isinstance(self.criterion, torch.nn.CrossEntropyLoss):
             #     loss = self.criterion(batch_output, torch.argmax(target_var.long(), axis=1))
@@ -112,65 +107,12 @@ class Trainer(object):
 
             display_step = train_utils.calculate_display_step(num_sample=train_samples, batch_size=self.config.DATA.BATCH_SIZE)
             # TODO: display_step = 10
-            display_step = 10
+            display_step = 100
             if i%display_step == 0:
                 self.logger.info('Step {}  Step loss {}'.format(i, loss))
         self.iterations = i
         if self.USE_TENSORBOARD:
             self.train_writer.add_scalar('Loss/epoch', total_train_loss/train_samples, self.epoch)
-
-    # def train(self):
-    #     self.model.train()
-    #     print(60*"=")
-    #     self.logger.info(f'Epoch {self.epoch}/{self.config.TRAIN.EPOCH}')
-    #     train_samples = len(self.train_dataloader.dataset)
-    #     for i, data in enumerate(self.train_dataloader, self.iterations + 1):
-    #         total_train_loss = 0.0
-    #         # batch_input, batch_target = data
-    #         # input_var = batch_input
-    #         # target_var = batch_target
-    #         # input_var, target_var = data['input'], data['gt']
-    #         input_var, target_var = data
-    #         input_var = train_utils.minmax_norm(input_var)
-    #         input_var, target_var = input_var.to(self.device), target_var.to(self.device)
-
-    #         # def closure():
-    #         batch_output = self.model(input_var)
-            
-    #         import matplotlib.pyplot as plt
-    #         # batch_output = self.activation_func(batch_output)
-    #         if i%20 == 0:
-    #             fig, ax = plt.subplots(1, 3)
-    #             ax[0].imshow(input_var.cpu().detach().numpy()[0,0], 'gray')
-    #             ax[0].imshow(target_var.cpu().detach().numpy()[0,0], cmap='jet', alpha=0.2)
-    #             ax[1].imshow(batch_output.cpu().detach().numpy()[0,0], 'gray')
-    #             ax[2].imshow(target_var.cpu().detach().numpy()[0,0], 'gray')
-    #             # plt.show()
-    #             fig.savefig(f'{i:03d}.png')
-
-    #         # if isinstance(self.criterion, torch.nn.CrossEntropyLoss):
-    #         #     loss = self.criterion(batch_output, torch.argmax(target_var.long(), axis=1))
-    #         # else:
-    #         #     loss = self.criterion(batch_output, target_var)
-    #         loss = self.criterion(batch_output, target_var)
-    #         loss.backward()
-    #             # return loss
-    #         self.optimizer.zero_grad()
-    #         self.optimizer.step()
-        
-    #         loss = loss.item()
-    #         total_train_loss += loss
-    #         if self.USE_TENSORBOARD:
-    #             self.train_writer.add_scalar('Loss/step', loss, i)
-
-    #         display_step = train_utils.calculate_display_step(num_sample=train_samples, batch_size=self.config.DATA.BATCH_SIZE)
-    #         # TODO: display_step = 10
-    #         display_step = 10
-    #         if i%display_step == 0:
-    #             self.logger.info('Step {}  Step loss {}'.format(i, loss))
-    #     self.iterations = i
-    #     if self.USE_TENSORBOARD:
-    #         self.train_writer.add_scalar('Loss/epoch', total_train_loss/train_samples, self.epoch)
 
     def validate(self):
         self.model.eval()
@@ -180,10 +122,11 @@ class Trainer(object):
         for _, data in enumerate(self.valid_dataloader):
             test_n_iter += 1
             # inputs, labels = data['input'], data['gt']
-            inputs, labels = data
-            inputs = train_utils.minmax_norm(inputs)
-            inputs, labels = inputs.to(self.device), labels.to(self.device)
-            outputs = self.model(inputs)
+            # inputs, labels = data
+            input_var, labels = data['input'], data['target']
+            # inputs = train_utils.minmax_norm(inputs)
+            input_var, labels = input_var.to(self.device), labels.to(self.device)
+            outputs = self.model(input_var)
 
             # if isinstance(self.criterion, torch.nn.CrossEntropyLoss):
             #     loss = self.criterion(outputs, torch.argmax(labels.long(), axis=1))

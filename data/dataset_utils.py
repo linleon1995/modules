@@ -19,7 +19,8 @@ def load_itk(filename):
     ct_scan = sitk.GetArrayFromImage(itkimage)
     origin = np.array(list(reversed(itkimage.GetOrigin())))
     spacing = np.array(list(reversed(itkimage.GetSpacing())))
-    return ct_scan, origin, spacing
+    direction = np.array(list(reversed(itkimage.GetDirection()))).reshape(3, 3)
+    return ct_scan, origin, spacing, direction
 
 
 def get_dir_list(data_path, full_path=True):
@@ -54,7 +55,8 @@ def load_audio_waveform(filename, audio_format, sr=None, channels=None):
     return y    
 
 
-def get_files(path, keys=[], return_fullpath=True, sort=True, sorting_key=None, recursive=True, get_dirs=False):
+def get_files(path, keys=[], return_fullpath=True, sort=True, sorting_key=None, recursive=True, get_dirs=False, ignore_suffix=False):
+    # TODO: have a better name
     """Get all the file name under the given path with assigned keys
     Args:
         path: (str)
@@ -73,6 +75,7 @@ def get_files(path, keys=[], return_fullpath=True, sort=True, sorting_key=None, 
     keys = list(set(keys))
 
     def push_back_filelist(root, f, file_list, is_fullpath):
+        f = f[:-4] if ignore_suffix else f
         if is_fullpath:
             file_list.append(os.path.join(root, f))
         else:
