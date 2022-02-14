@@ -5,12 +5,11 @@ from . import train_utils
 
 logger = train_utils.get_logger('ConfigLoader')
 
-# TODO: should call add_device
-def get_device(config):
+
+def get_device(device_str=None):
     # Get a device to train on
-    device_str = config.get('device', None)
     if device_str is not None:
-        logger.info(f"Device specified in config: '{device_str}'")
+        logger.info(f"Device: '{device_str}'")
         if device_str.startswith('cuda') and not torch.cuda.is_available():
             logger.warn('CUDA not available, using CPU')
             device_str = 'cpu'
@@ -19,8 +18,7 @@ def get_device(config):
         logger.info(f"Using '{device_str}' device")
 
     device = torch.device(device_str)
-    config['device'] = device
-    return config
+    return device
 
 
 def load_config(config_reference=None):

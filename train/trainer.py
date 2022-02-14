@@ -59,12 +59,14 @@ class Trainer(object):
         print(60*"=")
         self.logger.info(f'Epoch {self.epoch}/{self.config.TRAIN.EPOCH}')
         train_samples = len(self.train_dataloader.dataset)
+        total_train_loss = 0.0
         for i, data in enumerate(self.train_dataloader, self.iterations + 1):
-            total_train_loss = 0.0
             # batch_input, batch_target = data
             # input_var = batch_input
             # target_var = batch_target
             input_var, target_var = data['input'], data['target']
+            target_var = target_var.long()
+            # print(target_var[0,0])
             # input_var, target_var = data
             # input_var = train_utils.minmax_norm(input_var)
             input_var, target_var = input_var.to(self.device), target_var.to(self.device)
@@ -72,12 +74,12 @@ class Trainer(object):
             # def closure():
             batch_output = self.model(input_var)
             
-            import matplotlib.pyplot as plt
-            for n in range(8):
-                for i in range(0, 64, 10):
-                    plt.imshow(input_var[n,0,i].cpu().detach().numpy(), 'gray')
-                    plt.title(f'{n}-{i}-{target_var[n,0].item()}-{batch_output[n,0].item()}')
-                    plt.show()
+            # import matplotlib.pyplot as plt
+            # for n in range(8):
+            #     for i in range(0, 64):
+            #         plt.imshow(input_var[n,0,i].cpu().detach().numpy(), 'gray')
+            #         plt.title(f'{n}-{i}-{target_var[n,0].item()}-{batch_output[n,0].item()}')
+            #         plt.show()
             
             # import matplotlib.pyplot as plt
             # # batch_output = self.activation_func(batch_output)
@@ -94,11 +96,11 @@ class Trainer(object):
             #     loss = self.criterion(batch_output, torch.argmax(target_var.long(), axis=1))
             # else:
             #     loss = self.criterion(batch_output, target_var)
+            self.optimizer.zero_grad()
             loss = self.criterion(batch_output, target_var)
             loss.backward()
-                # return loss
-            self.optimizer.zero_grad()
             self.optimizer.step()
+                # return loss
         
             loss = loss.item()
             total_train_loss += loss
@@ -107,23 +109,25 @@ class Trainer(object):
 
             display_step = train_utils.calculate_display_step(num_sample=train_samples, batch_size=self.config.DATA.BATCH_SIZE)
             # TODO: display_step = 10
-            display_step = 100
+            display_step = 20
             if i%display_step == 0:
                 self.logger.info('Step {}  Step loss {}'.format(i, loss))
         self.iterations = i
         if self.USE_TENSORBOARD:
-            self.train_writer.add_scalar('Loss/epoch', total_train_loss/train_samples, self.epoch)
+            # TODO: correct total_train_loss
+            self.train_writer.add_scalar('Loss/epoch', self.config.DATA.BATCH_SIZE*total_train_loss/train_samples, self.epoch)
 
     def validate(self):
         self.model.eval()
         self.eval_tool = metrics.SegmentationMetrics(self.config.MODEL.NUM_CLASSES, ['accuracy'])
         test_n_iter, total_test_loss = 0, 0
         valid_samples = len(self.valid_dataloader.dataset)
-        for _, data in enumerate(self.valid_dataloader):
+        for idx, data in enumerate(self.valid_dataloader):
             test_n_iter += 1
             # inputs, labels = data['input'], data['gt']
             # inputs, labels = data
             input_var, labels = data['input'], data['target']
+            labels = labels.long()
             # inputs = train_utils.minmax_norm(inputs)
             input_var, labels = input_var.to(self.device), labels.to(self.device)
             outputs = self.model(input_var)
@@ -141,11 +145,15 @@ class Trainer(object):
             # prob = torch.nn.functional.softmax(outputs, dim=1)
             # prob = torch.sigmoid(outputs)
             if self.activation_func:
-                prob = self.activation_func(outputs)
+                if self.config.MODEL.ACTIVATION == 'softmax':
+                    prob = self.activation_func(outputs, dim=1)
+                else:
+                    prob = self.activation_func(outputs)
             else:
                 prob = outputs
             prediction = torch.argmax(prob, dim=1)
-            labels = torch.argmax(labels, dim=1)
+            labels = labels[:,0]
+
             labels = labels.cpu().detach().numpy()
             prediction = prediction.cpu().detach().numpy()
             evals = self.eval_tool(labels, prediction)
